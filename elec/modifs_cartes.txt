@@ -1,0 +1,49 @@
+carte moteurs FraiseStep 1.2:
+
+- couper piste de pin9 (RA7) entre R10 R19 face composants
+- couper piste de pin10 (RA6) face cuivre
+
+- assembler carte sans :
+R5 R9 R10 R13 R14 R18 R19 LED C8 C25 C22 C23 optocoupleurs(OK1 OK2)
+
+- raccorder R7 (pin du bas côté légende K1) sur pin11 (RC0)
+
+- souder quartz 16MHz entre pin 10 et 9, puis souder les 2 condos 22pF vers la masse
+
+- 4.7k pullups sur toutes les entrées
+- shunter les optocoupleurs (voir photo)
+- raccorder la masse et l'alim moteur sur bus Fraise (photo)
+
+moteur rotation:
+	codeur : K1: noir=masse blanc=alim rouge=phaseA
+			 K2: vert=phaseB
+	moteur : M1: rouge= noir=
+
+moteur translation:
+	codeur : K3: vert=masse bleu=alim jaune=phaseA
+			 K4: blanc=phaseB
+	moteur : M2: noir=gauche(côté bornier alim) rouge=droite(côté connecteur P4)
+
+switch rotation ZERO : K7 (contact à la masse, normalement ouvert)
+end switch translation : bas(début): K5 haut(fin):K6
+
+--------------
+
+carte contrôleur Versa1.2
+
+ne pas monter R3 ni LED_RED
+
+potentiomètre vitesse: K1
+
+poussoirs sur VNH2:
+	MB1		-----
+	MBEN	STARTSW
+	MBPWM	-----
+	MBCS	-----
+	MBEN2	STOPSW
+	MB2		HOMESW
+	VDD		-----
+	GND		GND
+
+afficheur LED : K5:[GND +5V SCL] K6:[- - SDA] ; ponter V_IO sur +5V à même l'afficheur
+

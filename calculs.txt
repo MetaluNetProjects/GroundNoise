@@ -1,0 +1,20 @@
+Rotation bras : 
+diam roue bras : 191 mm
+diam roue moteur : 83 mm
+diam roue codeur : 38 mm ; codeur SEN0230 400 impulsions/tour
+	800*191/38 = 4021 impulsions/tour_bras
+	
+rotation bras ~3 tr/mn= 20s/tour (réglable +/-10%) 4021/180=22imp/s = 45ms/imp
+avance cellule 1cm/tour
+
+65 tours : 261365 imp = 16 * 16335
+
+translation : pignon sortie 16mm diam donc 50mm circonf donc ~13tours pour la distance totale
+moteur 10tr/mn donc 6s/tour ; donc temps_reset=13*6=78s
+ sur un tour, translation=10mm donc 1/5 de tour_réducteur (en 20s soit 3/5tr/mn).
+ moteur : réducteur 1:264 encodeur 32inc/tour_moteur_primaire : 8448 inc/tour_réducteur ; 168960 inc total (pour 20 tours).
+ pour un tour_bras: avance de 10mm soit 264*32*10mm/50mm = 1690 inc/tour_bras. 1690/2010 ~= 27/32
+ 
+au homing : 1 tour_reducteur = 6s = 8448imp : 1408imps/s = 710us/imp
+
+en tout: 65 tour_bras: 109824imps = 8 * 13728 = 16 * 6864
