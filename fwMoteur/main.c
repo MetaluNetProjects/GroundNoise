@@ -25,7 +25,6 @@ DCMOTOR_DECLARE(A);
 DCMOTOR_DECLARE(B);
 #endif
 
-int turns = 0;
 int transSpeed = 0;
 int transHomePWM = -1024;
 int rotHomePWM = 200;
@@ -116,7 +115,7 @@ void testRotZero()
 	static unsigned char oldRotZero = 0;
 	unsigned char rotZero = 0;
 	
-	if((digitalRead(ROT_ZERO) == ROT_ZERO_LEVEL) || testRotZero)
+	if(digitalRead(ROT_ZERO) == ROT_ZERO_LEVEL)
 		rotZero = 1;
 		
 	if(rotZero == oldRotZero) return;
@@ -144,7 +143,7 @@ void testRotZero()
 		else rampGoto(&(DCMOTOR(A).PosRamp), ROT_PULSES_PER_TURN * 2);
 	}
 	else*/
-	if(state == STATE_HOMING) {
+	if((state == STATE_HOMING) && oldRotZero) {
 		DCMOTOR(A).VolVars.Position = 0;
 		rampSetPos(&(DCMOTOR(A).PosRamp), 0);
 		DCMOTOR(A).VolVars.homed = 1;
@@ -154,15 +153,21 @@ void testRotZero()
 
 void testTransEnds()
 {
-	if((digitalRead(TRANS_HISW) == TRANS_SWLEVEL) || (digitalRead(TRANS_LOSW) == TRANS_SWLEVEL)) {
+	if((digitalRead(TRANS_HISW) == TRANS_SWLEVEL) && (DCMOTOR(B).Vars.PWMConsign > 0)) {
 		DCMOTOR(B).Vars.PWMConsign = 0;
 		DCMOTOR(B).Setting.Mode = 0;
 	}
-	
+		
+	if((digitalRead(TRANS_LOSW) == TRANS_SWLEVEL) && (DCMOTOR(B).Vars.PWMConsign < 0)) {
+		DCMOTOR(B).Vars.PWMConsign = 0;
+		DCMOTOR(B).Setting.Mode = 0;
+	}
+
 	/*if((state == STATE_RUNNING) && (turns >= NB_TURNS) && (digitalRead(TRANS_HISW) == TRANS_SWLEVEL)) {
 		state = STATE_IDLE;
 	}
 	else */
+
 	if((state == STATE_HOMING) 
 			&& (DCMOTOR(A).VolVars.homed == 1) 
 			&& (digitalRead(TRANS_LOSW) == TRANS_SWLEVEL)) {
@@ -185,7 +190,7 @@ void sendStatus()
 #define RTNPOS (rampGetPos(&(DCMOTOR(A).PosRamp)))
 	frbuf[5] = (RTNPOS >> 8) & 255;
 	frbuf[6] = RTNPOS & 255;
-	frbuf[7] = turns & 255;
+	//frbuf[7] = turns & 255;
 	frbuf[8] = '\n';
 	fraiseSendBroadcast(frbuf, 9);
 }
@@ -223,12 +228,13 @@ void loop() {
 		
 		if(	(state == STATE_RUNNING)
 		&&	(rampGetPos(&DCMOTOR(A).PosRamp) == DCMOTOR(A).PosRamp.destPos)
-		&&	(rampGetPos(&DCMOTOR(B).PosRamp) == DCMOTOR(B).PosRamp.destPos)) {
+		/*&&	(rampGetPos(&DCMOTOR(B).PosRamp) == DCMOTOR(B).PosRamp.destPos)*/ // translation motor could be stopped by endswitch; in that case its position ramp isn't computed anymore
+		) {
 			state = STATE_IDLE; // FINISHED
 		}
 #endif
 		//rampCompute(&(DCMOTOR(A).PosRamp));
-		printf("Cr %ld %d %d %d\n", /*rampGetPos(&(DCMOTOR(A).PosRamp))*/RTNPOS, /*(DCMOTOR(A).PosRamp).speed*/turns, state, error);
+		printf("Cr %ld %d %d\n", /*rampGetPos(&(DCMOTOR(A).PosRamp))*/RTNPOS, /*(DCMOTOR(A).PosRamp).speed*/ state, DCMOTOR(A).VolVars.homed);
 		loopCount++;
 		if(loopCount == 100) {
 			loopCount = 0;
@@ -333,7 +339,7 @@ void fraiseReceiveCharBroadcast() // receive broadcast text
 	}
 	else if(c=='G') {	// GO
 		if(fraiseGetChar() != 'O') return;
-#define DEBUGA
+//#define DEBUGA
 #ifdef DEBUGA
 		if(state == STATE_RUNNING) return;
 		DCMOTOR(A).VolVars.Position = 0;
@@ -343,9 +349,9 @@ void fraiseReceiveCharBroadcast() // receive broadcast text
 		rampSetPos(&(DCMOTOR(B).PosRamp), 0);
 		DCMOTOR(B).VolVars.homed = 1;
 #else
-		if(state != STATE_HOMED) return;	// DEBUG!!
+		if(state != STATE_HOMED) return;
 #endif
-		turns = 0;
+		//turns = 0;
 		state = STATE_RUNNING;
 		rampGoto(&(DCMOTOR(A).PosRamp), ROT_RAMP_HIPOS /*ROT_PULSES_PER_TURN * 2*/);
 		DCMOTOR(A).Setting.Mode = 2;
@@ -371,8 +377,10 @@ void fraiseReceiveCharBroadcast() // receive broadcast text
 			DCMOTOR(A).VolVars.homed = 1;
 		}
 
-		DCMOTOR(B).Vars.PWMConsign = transHomePWM;
+		if(digitalRead(TRANS_LOSW) != TRANS_SWLEVEL)
+			DCMOTOR(B).Vars.PWMConsign = transHomePWM;
 		DCMOTOR(B).Setting.Mode = 0;
+		DCMOTOR(B).VolVars.homed = 0;
 	}
 	else if(c=='A') {	// ABORT
 		if(fraiseGetChar() != 'B') return;

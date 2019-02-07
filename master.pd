@@ -1,8 +1,8 @@
-#N canvas 37 210 265 385 10;
+#N canvas 37 237 265 385 10;
 #X declare -stdpath Fraise;
 #X obj 21 38 pied/pied 0 41424;
 #X obj 20 13 declare -stdpath Fraise;
-#N canvas 404 121 578 501 moteurs 0;
+#N canvas 275 123 578 501 moteurs 1;
 #X obj 17 331 fruit/receive fruit1;
 #X msg 408 430 L\$1;
 #X obj 408 407 tgl 15 0 empty empty set_LED 18 7 0 10 -4034 -1 -1 0
@@ -11,14 +11,13 @@
 #X obj 8 162 dcmotor/motor fruit1 121 motorB;
 #X msg 208 364 c 120 c 4 i \$1;
 #X obj 211 340 hsl 128 15 -1023 1023 0 0 empty empty PWM_rotation -2
--8 0 10 -4034 -1 -1 6350 1;
+-8 0 10 -4034 -1 -1 0 1;
 #X obj 231 404 hsl 128 15 -1023 1023 0 0 empty empty PWM_translation
--2 -8 0 10 -257985 -1 -1 6350 1;
+-2 -8 0 10 -257985 -1 -1 0 1;
 #X msg 228 428 c 121 c 4 i \$1;
 #X msg 171 403 0;
 #X floatatom 19 374 5 0 0 0 - - -;
-#X floatatom 60 397 5 0 0 0 - - -;
-#X obj 60 376 unpack f f;
+#X floatatom 60 397 5 0 0 3 position - -;
 #X msg 357 437 WRITE;
 #X obj 490 408 tgl 15 0 empty empty sendstatus 18 7 0 10 -4034 -1 -1
 0 1;
@@ -67,32 +66,37 @@
 #X connect 17 0 13 0;
 #X restore 439 340 pd tests;
 #X text 355 423 eeprom;
-#X connect 0 0 18 0;
-#X connect 1 0 17 1;
+#X floatatom 112 398 5 0 0 3 state - -;
+#X obj 60 376 unpack f f f, f 16;
+#X floatatom 144 450 5 0 0 0 rot_homed - -;
+#X connect 0 0 17 0;
+#X connect 1 0 16 1;
 #X connect 2 0 1 0;
-#X connect 5 0 17 0;
+#X connect 5 0 16 0;
 #X connect 6 0 5 0;
 #X connect 7 0 8 0;
-#X connect 8 0 17 0;
+#X connect 8 0 16 0;
 #X connect 9 0 6 0;
 #X connect 9 0 7 0;
-#X connect 12 0 11 0;
-#X connect 13 0 17 1;
-#X connect 14 0 15 0;
-#X connect 15 0 17 1;
-#X connect 16 0 17 1;
-#X connect 18 0 10 0;
-#X connect 18 1 12 0;
-#X connect 19 0 9 0;
+#X connect 12 0 16 1;
+#X connect 13 0 14 0;
+#X connect 14 0 16 1;
+#X connect 15 0 16 1;
+#X connect 17 0 10 0;
+#X connect 17 1 22 0;
+#X connect 18 0 9 0;
+#X connect 22 0 11 0;
+#X connect 22 1 21 0;
+#X connect 22 2 23 0;
 #X restore 146 194 pd moteurs;
-#N canvas 1 81 508 300 control 0;
+#N canvas 1 81 508 300 control 1;
 #X obj 107 44 fruit/receive fruitCtl;
 #X obj 107 65 analog/parse;
 #X obj 107 86 route 0;
 #X floatatom 107 107 5 0 0 0 - - -;
 #X obj 129 154 / 8;
 #X floatatom 129 175 5 0 0 0 - - -;
-#X obj 246 189 fruit/send fruitCtl;
+#X obj 325 215 fruit/send fruitCtl;
 #X msg 344 148 Q\$1;
 #X obj 344 126 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
 1;
@@ -102,7 +106,7 @@
 #X floatatom 213 148 5 0 0 0 - - -;
 #X floatatom 254 149 5 0 0 0 - - -;
 #X msg 276 102 L\$1;
-#X obj 280 69 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
+#X obj 280 69 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
 1;
 #X msg 411 83 c 1 c \$1;
 #X floatatom 406 47 5 0 15 2 brightness - -;
@@ -127,7 +131,7 @@
 #X obj 20 221 fruit/fruit 1 fruitCtl 2 fwControl 1;
 #X obj 23 347 fruit/send fruitCtl;
 #X msg 134 325 Q\$1;
-#X obj 134 303 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
+#X obj 134 303 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
 1;
 #X msg 23 326 c 1 c \$1;
 #X floatatom 23 305 5 0 15 2 brightness - -;
