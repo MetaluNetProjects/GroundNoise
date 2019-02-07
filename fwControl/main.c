@@ -26,7 +26,7 @@ unsigned char turns;
 int speed;
 
 int loopCount = 0;
-char doQuery = 0;
+char doQuery = 1;
 
 ht16k33 ledDisplay;
 t_delay inhibScreen = 0;
