@@ -1,8 +1,8 @@
-#N canvas 37 237 265 385 10;
+#N canvas 186 226 265 385 10;
 #X declare -stdpath Fraise;
 #X obj 21 38 pied/pied 0 41424;
 #X obj 20 13 declare -stdpath Fraise;
-#N canvas 275 123 578 501 moteurs 1;
+#N canvas 589 112 578 597 moteurs 1;
 #X obj 17 331 fruit/receive fruit1;
 #X msg 408 430 L\$1;
 #X obj 408 407 tgl 15 0 empty empty set_LED 18 7 0 10 -4034 -1 -1 0
@@ -11,9 +11,9 @@
 #X obj 8 162 dcmotor/motor fruit1 121 motorB;
 #X msg 208 364 c 120 c 4 i \$1;
 #X obj 211 340 hsl 128 15 -1023 1023 0 0 empty empty PWM_rotation -2
--8 0 10 -4034 -1 -1 0 1;
+-8 0 10 -4034 -1 -1 6350 1;
 #X obj 231 404 hsl 128 15 -1023 1023 0 0 empty empty PWM_translation
--2 -8 0 10 -257985 -1 -1 0 1;
+-2 -8 0 10 -257985 -1 -1 6350 1;
 #X msg 228 428 c 121 c 4 i \$1;
 #X msg 171 403 0;
 #X floatatom 19 374 5 0 0 0 - - -;
@@ -69,6 +69,11 @@
 #X floatatom 112 398 5 0 0 3 state - -;
 #X obj 60 376 unpack f f f, f 16;
 #X floatatom 144 450 5 0 0 0 rot_homed - -;
+#X msg 403 543 c 120 c 3 i \$1;
+#X floatatom 412 511 5 0 0 0 - - -;
+#X obj 410 485 * 100;
+#X floatatom 420 463 5 0 0 0 - - -;
+#X text 472 480 1000=0.5tr/mn;
 #X connect 0 0 17 0;
 #X connect 1 0 16 1;
 #X connect 2 0 1 0;
@@ -88,8 +93,12 @@
 #X connect 22 0 11 0;
 #X connect 22 1 21 0;
 #X connect 22 2 23 0;
+#X connect 24 0 16 0;
+#X connect 25 0 24 0;
+#X connect 26 0 25 0;
+#X connect 27 0 26 0;
 #X restore 146 194 pd moteurs;
-#N canvas 1 81 508 300 control 1;
+#N canvas 1 81 508 300 control 0;
 #X obj 107 44 fruit/receive fruitCtl;
 #X obj 107 65 analog/parse;
 #X obj 107 86 route 0;

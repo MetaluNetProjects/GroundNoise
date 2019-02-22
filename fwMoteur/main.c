@@ -100,6 +100,8 @@ void setup(void) {
 	EEreadMain();
 #endif
 	
+	DCMOTOR(B).Setting.reversed = 1;
+
 	T1CON=0b00110011;//src=fosc/4,ps=8,16bit r/w,on.
 	PIE1bits.TMR1IE=1;  //1;
 	IPR1bits.TMR1IP=1;
