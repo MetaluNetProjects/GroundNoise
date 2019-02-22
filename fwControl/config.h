@@ -8,6 +8,8 @@
 #define STARTSW		MBEN
 #define STOPSW		MBEN2
 #define HOMESW		MB2
+#define DIRSW		MBPWM
+#define MODESW		MOTB_CURRENT
 
 #define I2CMASTER_PORT 1 // K5=SCL K7=SDA
 

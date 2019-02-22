@@ -36,14 +36,14 @@ ne pas monter R3 ni LED_RED
 potentiomètre vitesse: K1
 
 poussoirs sur VNH2:
-	MB1		-----
-	MBEN	STARTSW
-	MBPWM	-----
-	MBCS	-----
-	MBEN2	STOPSW
-	MB2		HOMESW
-	VDD		-----
-	GND		GND
+	MB1			-----
+	MBEN		STARTSW
+	MBPWM(K9)	DIRSW
+	MBCS(K10)	MODESW
+	MBEN2		STOPSW
+	MB2			HOMESW
+	VDD			-----
+	GND			GND
 
 afficheur LED : K5:[GND +5V SCL] K6:[- - SDA] ; ponter V_IO sur +5V à même l'afficheur
 

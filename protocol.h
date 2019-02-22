@@ -14,6 +14,11 @@ enum {
 	ERROR_NO_TRANS_HOME, // trans home wasn't detected
 };
 
+enum {
+	MODE_MANUAL = 0,
+	MODE_AUTO
+};
+
 // for broadcast fruit-to-fruit communication:
 #define MOTOR_ID 100
 #define CONTROL_ID 200
@@ -25,9 +30,15 @@ enum {
 
 #define ROT_RAMP_HIPOS ((ROT_PULSES_PER_TURN * NB_TURNS) >> RAMPDIV_POW)
 #define TRANS_RAMP_HIPOS ((TRANS_PULSES_PER_TURN * NB_TURNS) >> RAMPDIV_POW)
-#define ROT2TRANS(rot_pulses) (((long)rot_pulses * 27)>>6) // 27/64 ~= 1690/4021
+#define ROT2TRANS(rot_pulses) (((long)(rot_pulses) * 27)>>6) // 27/64 ~= 1690/4021
 
 #define CENTER_SPEED 1000
+
+#define MAXSPEED 8200
+
+// 1000 = 0.5tr/mn = 120s
+// 8500 = 4.25tr/mn = 14s
+
 
 #endif
 

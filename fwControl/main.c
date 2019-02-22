@@ -14,9 +14,13 @@
 #include "../protocol.h"
 
 t_delay mainDelay;
+
+// switches:
 char oldStart = 0;
 char oldStop = 0;
 char oldHome = 0;
+char oldDir = 0;
+char oldMode = 0;
 
 unsigned char error = ERROR_NONE;
 unsigned char state = STATE_IDLE;
@@ -42,6 +46,8 @@ void setup(void) {
 	pinModeDigitalIn(STARTSW);
 	pinModeDigitalIn(STOPSW);
 	pinModeDigitalIn(HOMESW);
+	pinModeDigitalIn(DIRSW);
+	pinModeDigitalIn(MODESW);
 
 //----------- Analog setup ----------------
 	analogInit();		// init analog module
@@ -62,17 +68,20 @@ void setup(void) {
 	ht16k33_writeDisplay(&ledDisplay);
 }
 
-void print(int n, unsigned char dots)
+void print(int n, unsigned char dots, unsigned char minus)
 {
 	ht16k33_printNumber(&ledDisplay, n, 10);
 	ht16k33_writeDigitRaw(&ledDisplay, 2, dots);
+	if(minus) ht16k33_writeDigitRaw(&ledDisplay, 0, 0x40);
 	ht16k33_writeDisplay(&ledDisplay);
 }
 
 void sendSpeed()
 {
 	unsigned char frbuf[6];
-	unsigned int finalSpeed = ((unsigned long)speed * CENTER_SPEED / 1000);
+	//int finalSpeed = ((long)speed * CENTER_SPEED / 1000);
+	int finalSpeed = speed * 10;
+	if(oldDir == 1) finalSpeed = -finalSpeed;
 	frbuf[0] = 'C';
 	frbuf[1] = MOTOR_ID;
 	frbuf[2] = 'S';
@@ -80,10 +89,12 @@ void sendSpeed()
 	frbuf[4] = finalSpeed&255;
 	frbuf[5] = '\n';
 	fraiseSendBroadcast(frbuf, 6);
+	
+	print(speed, 2 + 12 * oldMode, oldDir);
 	delayStart(inhibScreen, 2000000);
 }
 
-void speedService()
+void __speedService()
 {
 	static char up = 0;
 	// pot[0 -> 1024] => speed[900 -> 1100]
@@ -98,33 +109,63 @@ void speedService()
 			up = 0;
 		}
 		else if(tmpspeed <= speed) return;
-	} else {
+	} else { 
 		if(tmpspeed > speed + 2) {
 			up = 1;
 		}
-		else if(tmpspeed >= speed) return;
+	 
+	 	else if(tmpspeed >= speed) return;
 	}
 	speed = tmpspeed;
-//	print(speed, 0);
-	tmp_seconds = 1330000UL/speed;
-	print((tmp_seconds/60)*100 + (tmp_seconds%60), 2);
+	print(speed, 0, 0);
+//	tmp_seconds = 1330000UL/speed;
+//	print((tmp_seconds/60)*100 + (tmp_seconds%60), 2);
+	sendSpeed();
+}
+
+void speedService()
+{
+	static char up = 0;
+	// pot[0 -> 1024] => speed[900 -> 1100]
+	int tmpspeed = (((long)(analogGet(0) >> ANALOG_FILTER) * 810) >> 10) - 5;
+	
+	if(tmpspeed > 800) tmpspeed = 800;
+	if(tmpspeed < 0) tmpspeed = 0;
+	
+	if(up) {
+		if(tmpspeed < speed - 2) {
+			up = 0;
+		}
+		else if(tmpspeed <= speed) return;
+	} else { 
+		if(tmpspeed > speed + 2) {
+			up = 1;
+		}
+	 
+	 	else if(tmpspeed >= speed) return;
+	}
+	speed = tmpspeed;
+	//print(speed, 2, oldDir);
+//	tmp_seconds = 1330000UL/speed;
+//	print((tmp_seconds/60)*100 + (tmp_seconds%60), 2);
 	sendSpeed();
 }
 
 void doStart()
 {
-	unsigned char frbuf[5];
+	unsigned char frbuf[6];
 	frbuf[0] = 'C';
 	frbuf[1] = MOTOR_ID;
 	frbuf[2] = 'G';
 	frbuf[3] = 'O';
-	frbuf[4] = '\n';
-	fraiseSendBroadcast(frbuf, 5);
+	frbuf[4] = oldStart+'0';
+	frbuf[5] = '\n';
+	fraiseSendBroadcast(frbuf, 6);
 }
 
 void doStop()
 {
-	unsigned char frbuf[8];
+	unsigned char frbuf[9];
 	frbuf[0] = 'C';
 	frbuf[1] = MOTOR_ID;
 	frbuf[2] = 'A';
@@ -132,8 +173,9 @@ void doStop()
 	frbuf[4] = 'O';
 	frbuf[5] = 'R';
 	frbuf[6] = 'T';
-	frbuf[7] = '\n';
-	fraiseSendBroadcast(frbuf, 8);
+	frbuf[7] = oldStop+'0';
+	frbuf[8] = '\n';
+	fraiseSendBroadcast(frbuf, 9);
 }
 
 void doHome()
@@ -145,8 +187,37 @@ void doHome()
 	frbuf[3] = 'O';
 	frbuf[4] = 'M';
 	frbuf[5] = 'E';
+	frbuf[6] = oldHome+'0';
+	frbuf[7] = '\n';
+	fraiseSendBroadcast(frbuf, 8);
+}
+
+void doDir()
+{
+	/*unsigned char frbuf[7];
+	frbuf[0] = 'C';
+	frbuf[1] = MOTOR_ID;
+	frbuf[2] = 'D';
+	frbuf[3] = 'I';
+	frbuf[4] = 'R';
+	frbuf[5] = oldDir+'0';
+	frbuf[6] = '\n';
+	fraiseSendBroadcast(frbuf, 7);*/
+	sendSpeed();
+}
+
+void doMode()
+{
+	unsigned char frbuf[7];
+	frbuf[0] = 'C';
+	frbuf[1] = MOTOR_ID;
+	frbuf[2] = 'M';
+	frbuf[3] = 'O';
+	frbuf[4] = 'D';
+	frbuf[5] = oldMode+'0';
 	frbuf[6] = '\n';
 	fraiseSendBroadcast(frbuf, 7);
+	sendSpeed();
 }
 
 void switchesService()
@@ -154,6 +225,8 @@ void switchesService()
 	char tmpStart = !digitalRead(STARTSW);
 	char tmpStop = !digitalRead(STOPSW);
 	char tmpHome = !digitalRead(HOMESW);
+	char tmpDir = !digitalRead(DIRSW);
+	char tmpMode = !digitalRead(MODESW);
 	
 	if(tmpStart != oldStart) {
 		oldStart = tmpStart;
@@ -166,6 +239,14 @@ void switchesService()
 	if(tmpHome != oldHome) {
 		oldHome = tmpHome;
 		doHome();
+	}
+	if(tmpDir != oldDir) {
+		oldDir = tmpDir;
+		doDir();
+	}
+	if(tmpMode != oldMode) {
+		oldMode = tmpMode;
+		doMode();
 	}
 }
 
@@ -238,10 +319,10 @@ void fraiseReceiveBroadcast() // receive broadcast
 		pos = fraiseGetInt();
 		turns = fraiseGetChar();
 	}
-	if((!inhibScreen) || delayFinished(inhibScreen)) {
+	/*if((!inhibScreen) || delayFinished(inhibScreen)) {
 		inhibScreen = 0;
 		print((unsigned long)pos*9999/ROT_RAMP_HIPOS, 0);
-	}
+	}*/
 }
 
 void fraiseReceive() // receive raw

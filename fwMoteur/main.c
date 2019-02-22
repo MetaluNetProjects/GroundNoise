@@ -1,6 +1,7 @@
 /*********************************************************************
- *               analog example for Versa1.0
- *	Analog capture on connectors K1, K2, K3 and K5. 
+ *               Ground Noise Motor 
+ * .board: StepGN (FraiseStep 1.2 + 16MHz quartz)
+ *  Antoine Rousseau @ metalu.net - feb.2019
  *********************************************************************/
 
 #define BOARD StepGN
@@ -25,9 +26,22 @@ DCMOTOR_DECLARE(A);
 DCMOTOR_DECLARE(B);
 #endif
 
-int transSpeed = 0;
+int speed = 0;
+int targetSpeed = 0;
+#define SPEED_FILTER 4
+
 int transHomePWM = -1024;
 int rotHomePWM = 200;
+
+unsigned char error = ERROR_NONE;
+unsigned char state = STATE_IDLE;
+unsigned char mode = MODE_MANUAL;
+
+//char startSw = 0;
+//char stopSw = 0;
+char homeSw = 0;
+//char dirSw = 0;
+//char modeSw = 0;
 
 //-------------  Timer1 macros :  ---------------------------------------- 
 //prescaler=PS fTMR1=FOSC/(4*PS) nbCycles=0xffff-TMR1init T=nbCycles/fTMR1=(0xffff-TMR1init)*4PS/FOSC
@@ -39,10 +53,6 @@ int rotHomePWM = 200;
 #define InitTimer(T) do{ TMR1H=TMR1init(T)/256 ; TMR1L=TMR1init(T)%256; PIR1bits.TMR1IF=0; }while(0)
 #define InitTimerUS(T) do{ TMR1H=TMR1initUS(T)/256 ; TMR1L=TMR1initUS(T)%256; PIR1bits.TMR1IF=0; }while(0)
 #define TimerOut() (PIR1bits.TMR1IF)
-
-
-unsigned char error = ERROR_NONE;
-unsigned char state = STATE_IDLE;
 
 void highInterrupts()
 {
@@ -63,8 +73,8 @@ void setup(void) {
 
 //----------- Analog setup ----------------
 	analogInit();		// init analog module
-//	analogSelect(0, MOTA_CURRENT);	// assign MotorA current sense to analog channel 0
-//	analogSelect(1, MOTB_CURRENT);	// assign MotorB current sense to analog channel 1
+	analogSelect(0, MAC);	// assign MotorA current sense to analog channel 0
+	analogSelect(1, MBC);	// assign MotorB current sense to analog channel 1
 
 //----------- dcmotor setup ----------------
 
@@ -107,11 +117,6 @@ void setup(void) {
 	IPR1bits.TMR1IP=1;
 }
 
-/*void computeTransSpeed()
-{
-	transSpeed = (posRamp.maxSpeed * 1024) >> 10;
-}*/
-
 void testRotZero()
 {
 	static unsigned char oldRotZero = 0;
@@ -145,12 +150,14 @@ void testRotZero()
 		else rampGoto(&(DCMOTOR(A).PosRamp), ROT_PULSES_PER_TURN * 2);
 	}
 	else*/
+	#if 0
 	if((state == STATE_HOMING) && oldRotZero) {
 		DCMOTOR(A).VolVars.Position = 0;
 		rampSetPos(&(DCMOTOR(A).PosRamp), 0);
 		DCMOTOR(A).VolVars.homed = 1;
 		DCMOTOR(A).Vars.PWMConsign = 0;
 	}
+	#endif
 }
 
 void testTransEnds()
@@ -170,13 +177,27 @@ void testTransEnds()
 	}
 	else */
 
+	if((state == STATE_RUNNING) 
+	&& (digitalRead(TRANS_HISW) == TRANS_SWLEVEL)
+	&& (mode == MODE_AUTO)) {
+		state = STATE_HOMING;
+		DCMOTOR(A).Vars.PWMConsign = 0; // stop rotation
+		DCMOTOR(A).Setting.Mode = 0;
+		DCMOTOR(B).Vars.PWMConsign = transHomePWM;
+		DCMOTOR(B).Setting.Mode = 0;
+	}
+		
 	if((state == STATE_HOMING) 
-			&& (DCMOTOR(A).VolVars.homed == 1) 
-			&& (digitalRead(TRANS_LOSW) == TRANS_SWLEVEL)) {
-		state = STATE_HOMED;
+	/*&& (DCMOTOR(A).VolVars.homed == 1) */
+	&& (digitalRead(TRANS_LOSW) == TRANS_SWLEVEL)) {
+		state = STATE_RUNNING;
+		DCMOTOR(A).VolVars.Position = 0;
 		DCMOTOR(B).VolVars.Position = 0;
-		rampSetPos(&(DCMOTOR(B).PosRamp), 0);
+		//rampSetPos(&(DCMOTOR(B).PosRamp), 0);
+		DCMOTOR(A).VolVars.homed = 1;
 		DCMOTOR(B).VolVars.homed = 1;
+		/*DCMOTOR(A).Vars.SpeedConsign = speed>>SPEED_FILTER; 
+		DCMOTOR(A).Setting.Mode = 1;*/
 	}
 }
 	
@@ -212,28 +233,46 @@ char doSendStatus = 0;
 void loop() {
 // ---------- Main loop ------------
 	fraiseService();	// listen to Fraise events
-	//analogService();	// analog management routine
+	analogService();	// analog management routine
 
 	if(delayFinished(mainDelay)) // when mainDelay triggers :
 	{
 		delayStart(mainDelay, 10000); 	// re-init mainDelay
-		//analogSend();		// send analog channels that changed
+		analogSend();		// send analog channels that changed
+		fraiseService();
 #ifdef USE_MOTORS
+		speed = speed - (speed>>SPEED_FILTER) + targetSpeed;
+
+		if(state == STATE_RUNNING) {
+			DCMOTOR(A).Vars.SpeedConsign = speed>>SPEED_FILTER;
+			DCMOTOR(A).Setting.Mode = 1;
+		}
+		
+		if(homeSw) {
+			DCMOTOR(B).Vars.PWMConsign = transHomePWM;
+			DCMOTOR(B).Setting.Mode = 0;
+		} else {
+			if(state == STATE_RUNNING) {
+				DCMOTOR(B).Vars.SpeedConsign = ROT2TRANS(speed>>SPEED_FILTER);
+				DCMOTOR(B).Setting.Mode = 1;
+			}
+		}
+
 		testRotZero();
 		testTransEnds();
 		DCMOTOR_COMPUTE(A,ASYM2);
-		if(state == STATE_RUNNING)
-			rampGoto(&DCMOTOR(B).PosRamp, ROT2TRANS(rampGetPos(&DCMOTOR(A).PosRamp)));
+		/*if(state == STATE_RUNNING)
+			rampGoto(&DCMOTOR(B).PosRamp, ROT2TRANS(rampGetPos(&DCMOTOR(A).PosRamp)));*/
+		
 		DCMOTOR_COMPUTE(B,ASYM2);
 		
 		fraiseService();
 		
-		if(	(state == STATE_RUNNING)
+		/*if(	(state == STATE_RUNNING)
 		&&	(rampGetPos(&DCMOTOR(A).PosRamp) == DCMOTOR(A).PosRamp.destPos)
-		/*&&	(rampGetPos(&DCMOTOR(B).PosRamp) == DCMOTOR(B).PosRamp.destPos)*/ // translation motor could be stopped by endswitch; in that case its position ramp isn't computed anymore
 		) {
 			state = STATE_IDLE; // FINISHED
-		}
+		}*/
 #endif
 		//rampCompute(&(DCMOTOR(A).PosRamp));
 		printf("Cr %ld %d %d\n", /*rampGetPos(&(DCMOTOR(A).PosRamp))*/RTNPOS, /*(DCMOTOR(A).PosRamp).speed*/ state, DCMOTOR(A).VolVars.homed);
@@ -274,57 +313,6 @@ void fraiseReceiveChar() // receive text
 	else if(c=='U') { // get status
 		sendStatus();
 	}
-	/*else if(c=='G') {	// GO
-		if(fraiseGetChar() != 'O') return;
-		if(state != STATE_HOMED) return;
-		state = STATE_RUNNING;
-		turns = 0;
-		rampGoto(&(DCMOTOR(A).PosRamp), ROT_PULSES_PER_TURN * 2);
-		DCMOTOR(A).Setting.Mode = 2;
-		DCMOTOR(B).Vars.SpeedConsign = transSpeed;
-		DCMOTOR(B).Setting.Mode = 1;
-	}
-	else if(c=='H') {	// HOME
-		if(fraiseGetChar() != 'O') return;
-		if(fraiseGetChar() != 'M') return;
-		if(fraiseGetChar() != 'E') return;
-		if(state != STATE_IDLE) return;
-
-		state = STATE_HOMING;
-
-		if(digitalRead(ROT_ZERO) != ROT_ZERO_LEVEL) {
-			DCMOTOR(A).VolVars.homed = 0;
-			if(DCMOTOR_GETPOS(A) > ROT_PULSES_PER_TURN) 
-				DCMOTOR(A).Vars.PWMConsign = rotHomePWM;
-			else DCMOTOR(A).Vars.PWMConsign = -rotHomePWM;
-			DCMOTOR(A).Setting.Mode = 0;
-		} else {
-			DCMOTOR(A).VolVars.Position = 0;
-			rampSetPos(&(DCMOTOR(A).PosRamp), 0);
-			DCMOTOR(A).VolVars.homed = 1;
-		}
-
-		DCMOTOR(B).Vars.PWMConsign = transHomePWM;
-		DCMOTOR(B).Setting.Mode = 0;
-	}
-	else if(c=='A') {	// ABORT
-		if(fraiseGetChar() != 'B') return;
-		if(fraiseGetChar() != 'O') return;
-		if(fraiseGetChar() != 'R') return;
-		if(fraiseGetChar() != 'T') return;
-
-		if(state == STATE_IDLE) return;
-
-		state = STATE_IDLE;
-		DCMOTOR(A).Vars.PWMConsign = 0;
-		DCMOTOR(A).Setting.Mode = 0;
-		DCMOTOR(B).Vars.PWMConsign = 0;
-		DCMOTOR(B).Setting.Mode = 0;
-	}
-	else if(c=='S') { //SPEED
-		(DCMOTOR(A).PosRamp).maxSpeed = fraiseGetInt();
-		computeTransSpeed();
-	}*/
 }
 
 void fraiseReceiveCharBroadcast() // receive broadcast text
@@ -341,7 +329,7 @@ void fraiseReceiveCharBroadcast() // receive broadcast text
 	}
 	else if(c=='G') {	// GO
 		if(fraiseGetChar() != 'O') return;
-//#define DEBUGA
+/*//#define DEBUGA
 #ifdef DEBUGA
 		if(state == STATE_RUNNING) return;
 		DCMOTOR(A).VolVars.Position = 0;
@@ -353,19 +341,22 @@ void fraiseReceiveCharBroadcast() // receive broadcast text
 #else
 		if(state != STATE_HOMED) return;
 #endif
-		//turns = 0;
+		//turns = 0;*/
 		state = STATE_RUNNING;
-		rampGoto(&(DCMOTOR(A).PosRamp), ROT_RAMP_HIPOS /*ROT_PULSES_PER_TURN * 2*/);
+		/*rampGoto(&(DCMOTOR(A).PosRamp), ROT_RAMP_HIPOS );
 		DCMOTOR(A).Setting.Mode = 2;
-		DCMOTOR(B).Setting.Mode = 2;
+		DCMOTOR(B).Setting.Mode = 2;*/
+		
 	}
 	else if(c=='H') {	// HOME
 		if(fraiseGetChar() != 'O') return;
 		if(fraiseGetChar() != 'M') return;
 		if(fraiseGetChar() != 'E') return;
-		if(state != STATE_IDLE) return;
+		
+		homeSw = fraiseGetChar() - '0';
+		//if(state != STATE_IDLE) return;
 
-		state = STATE_HOMING;
+		/*state = STATE_HOMING;
 
 		if(digitalRead(ROT_ZERO) != ROT_ZERO_LEVEL) {
 			DCMOTOR(A).VolVars.homed = 0;
@@ -382,7 +373,14 @@ void fraiseReceiveCharBroadcast() // receive broadcast text
 		if(digitalRead(TRANS_LOSW) != TRANS_SWLEVEL)
 			DCMOTOR(B).Vars.PWMConsign = transHomePWM;
 		DCMOTOR(B).Setting.Mode = 0;
-		DCMOTOR(B).VolVars.homed = 0;
+		DCMOTOR(B).VolVars.homed = 0;*/
+		
+	}
+	else if(c=='M') {	// MOD
+		if(fraiseGetChar() != 'O') return;
+		if(fraiseGetChar() != 'D') return;
+		
+		mode = fraiseGetChar() - '0';
 	}
 	else if(c=='A') {	// ABORT
 		if(fraiseGetChar() != 'B') return;
@@ -402,8 +400,8 @@ void fraiseReceiveCharBroadcast() // receive broadcast text
 		sendStatus();
 	}
 	else if(c=='S') { //SPEED
-		(DCMOTOR(A).PosRamp).maxSpeed = fraiseGetInt();
-		//computeTransSpeed();
+		//(DCMOTOR(A).PosRamp).maxSpeed = fraiseGetInt();
+		targetSpeed = fraiseGetInt();
 	}
 }
 

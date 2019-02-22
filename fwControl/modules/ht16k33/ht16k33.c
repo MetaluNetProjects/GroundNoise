@@ -59,6 +59,8 @@ static const uint8_t numbertable[] = {
 	0x71, /* F */
 };
 
+#define MINUS 0x40
+
 void ht16k33_setBrightness(ht16k33 *dev, uint8_t b) {
 	if (b > 15) b = 15;
 	i2cm_begin(dev->i2c_addr, 0);
