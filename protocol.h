@@ -30,6 +30,8 @@ enum {
 
 #define ROT_RAMP_HIPOS ((ROT_PULSES_PER_TURN * NB_TURNS) >> RAMPDIV_POW)
 #define TRANS_RAMP_HIPOS ((TRANS_PULSES_PER_TURN * NB_TURNS) >> RAMPDIV_POW)
+
+// 27 is adjustable. ex:27-> la tete avance de 27/2 mm/tour (approx)
 #define ROT2TRANS(rot_pulses) (((long)(rot_pulses) * 27)>>6) // 27/64 ~= 1690/4021
 
 #define CENTER_SPEED 1000
