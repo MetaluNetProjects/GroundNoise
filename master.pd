@@ -1,8 +1,8 @@
-#N canvas 186 226 265 385 10;
+#N canvas 273 220 265 385 10;
 #X declare -stdpath Fraise;
 #X obj 21 38 pied/pied 0 41424;
 #X obj 20 13 declare -stdpath Fraise;
-#N canvas 589 112 578 597 moteurs 1;
+#N canvas 591 112 576 597 moteurs 0;
 #X obj 17 331 fruit/receive fruit1;
 #X msg 408 430 L\$1;
 #X obj 408 407 tgl 15 0 empty empty set_LED 18 7 0 10 -4034 -1 -1 0
@@ -16,7 +16,7 @@
 -2 -8 0 10 -257985 -1 -1 6350 1;
 #X msg 228 428 c 121 c 4 i \$1;
 #X msg 171 403 0;
-#X floatatom 19 374 5 0 0 0 - - -;
+#X floatatom 24 376 5 0 0 0 - - -;
 #X floatatom 60 397 5 0 0 3 position - -;
 #X msg 357 437 WRITE;
 #X obj 490 408 tgl 15 0 empty empty sendstatus 18 7 0 10 -4034 -1 -1
@@ -24,7 +24,7 @@
 #X msg 490 431 s\$1;
 #X msg 454 431 U;
 #X obj 228 465 fruit/send fruit1, f 22;
-#X obj 17 353 route P r;
+#X obj 32 351 route P r;
 #X msg 160 338 STOP!;
 #N canvas 1 81 450 300 tests 0;
 #X obj 52 65 bng 50 250 50 0 empty empty empty 17 7 0 10 -262144 -1
@@ -74,6 +74,11 @@
 #X obj 410 485 * 100;
 #X floatatom 420 463 5 0 0 0 - - -;
 #X text 472 480 1000=0.5tr/mn;
+#X obj 17 504 analog/parse;
+#X obj 17 525 route 0 1;
+#X floatatom 17 546 5 0 0 0 - - -;
+#X floatatom 56 548 5 0 0 0 - - -;
+#X obj 119 517 print;
 #X connect 0 0 17 0;
 #X connect 1 0 16 1;
 #X connect 2 0 1 0;
@@ -89,6 +94,7 @@
 #X connect 15 0 16 1;
 #X connect 17 0 10 0;
 #X connect 17 1 22 0;
+#X connect 17 2 29 0;
 #X connect 18 0 9 0;
 #X connect 22 0 11 0;
 #X connect 22 1 21 0;
@@ -97,6 +103,9 @@
 #X connect 25 0 24 0;
 #X connect 26 0 25 0;
 #X connect 27 0 26 0;
+#X connect 29 0 30 0;
+#X connect 30 0 31 0;
+#X connect 30 1 32 0;
 #X restore 146 194 pd moteurs;
 #N canvas 1 81 508 300 control 0;
 #X obj 107 44 fruit/receive fruitCtl;

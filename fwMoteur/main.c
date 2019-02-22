@@ -26,9 +26,9 @@ DCMOTOR_DECLARE(A);
 DCMOTOR_DECLARE(B);
 #endif
 
-int speed = 0;
+long int speed = 0;
 int targetSpeed = 0;
-#define SPEED_FILTER 4
+#define SPEED_FILTER 6
 
 int transHomePWM = -1024;
 int rotHomePWM = 200;
@@ -253,8 +253,11 @@ void loop() {
 			DCMOTOR(B).Setting.Mode = 0;
 		} else {
 			if(state == STATE_RUNNING) {
-				DCMOTOR(B).Vars.SpeedConsign = ROT2TRANS(speed>>SPEED_FILTER);
+				DCMOTOR(B).Vars.SpeedConsign = -1*ROT2TRANS(speed>>SPEED_FILTER);
 				DCMOTOR(B).Setting.Mode = 1;
+			} else {
+				//DCMOTOR(B).Vars.PWMConsign = 0;
+				//DCMOTOR(B).Setting.Mode = 0;
 			}
 		}
 
@@ -275,7 +278,7 @@ void loop() {
 		}*/
 #endif
 		//rampCompute(&(DCMOTOR(A).PosRamp));
-		printf("Cr %ld %d %d\n", /*rampGetPos(&(DCMOTOR(A).PosRamp))*/RTNPOS, /*(DCMOTOR(A).PosRamp).speed*/ state, DCMOTOR(A).VolVars.homed);
+		//printf("Cr %ld %d %d\n", /*rampGetPos(&(DCMOTOR(A).PosRamp))*/RTNPOS, /*(DCMOTOR(A).PosRamp).speed*/ state, DCMOTOR(A).VolVars.homed);
 		loopCount++;
 		if(loopCount == 100) {
 			loopCount = 0;

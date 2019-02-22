@@ -30,7 +30,7 @@ unsigned char turns;
 int speed;
 
 int loopCount = 0;
-char doQuery = 1;
+char doQuery = 0;
 
 ht16k33 ledDisplay;
 t_delay inhibScreen = 0;
@@ -80,7 +80,7 @@ void sendSpeed()
 {
 	unsigned char frbuf[6];
 	//int finalSpeed = ((long)speed * CENTER_SPEED / 1000);
-	int finalSpeed = speed * 10;
+	int finalSpeed = ((long)speed * 45) >> 2;
 	if(oldDir == 1) finalSpeed = -finalSpeed;
 	frbuf[0] = 'C';
 	frbuf[1] = MOTOR_ID;
@@ -90,7 +90,7 @@ void sendSpeed()
 	frbuf[5] = '\n';
 	fraiseSendBroadcast(frbuf, 6);
 	
-	print(speed, 2 + 12 * oldMode, oldDir);
+	print(speed, 2 + 12 * oldMode, oldDir==0);
 	delayStart(inhibScreen, 2000000);
 }
 
