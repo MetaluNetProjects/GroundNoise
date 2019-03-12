@@ -30,7 +30,7 @@ unsigned char turns;
 int speed;
 
 int loopCount = 0;
-char doQuery = 0;
+char doQuery = 1;
 
 ht16k33 ledDisplay;
 t_delay inhibScreen = 0;
@@ -41,6 +41,9 @@ void setup(void) {
 
 	pinModeDigitalOut(LED); 		// set the LED pin mode to digital out
 	digitalClear(LED);				// clear the LED
+	pinModeDigitalOut(RUNNING); 		// set the RUNNING pin mode to digital out
+	digitalClear(RUNNING);				// clear the RUNNING pin
+
 	delayStart(mainDelay, 5000); 	// init the mainDelay to 5 ms
 
 	pinModeDigitalIn(STARTSW);
@@ -76,6 +79,12 @@ void print(int n, unsigned char dots, unsigned char minus)
 	ht16k33_writeDisplay(&ledDisplay);
 }
 
+void printSpeed()
+{
+	print(speed, 2 + (8 + 4 * (state != STATE_HOMING)) * oldMode, oldDir==0);
+	//delayStart(inhibScreen, 2000000);
+}
+
 void sendSpeed()
 {
 	unsigned char frbuf[6];
@@ -89,11 +98,10 @@ void sendSpeed()
 	frbuf[4] = finalSpeed&255;
 	frbuf[5] = '\n';
 	fraiseSendBroadcast(frbuf, 6);
-	
-	print(speed, 2 + 12 * oldMode, oldDir==0);
-	delayStart(inhibScreen, 2000000);
+//	printSpeed();
 }
 
+#if 0
 void __speedService()
 {
 	static char up = 0;
@@ -120,8 +128,9 @@ void __speedService()
 	print(speed, 0, 0);
 //	tmp_seconds = 1330000UL/speed;
 //	print((tmp_seconds/60)*100 + (tmp_seconds%60), 2);
-	sendSpeed();
+//	sendSpeed();
 }
+#endif
 
 void speedService()
 {
@@ -217,7 +226,7 @@ void doMode()
 	frbuf[5] = oldMode+'0';
 	frbuf[6] = '\n';
 	fraiseSendBroadcast(frbuf, 7);
-	sendSpeed();
+//	sendSpeed();
 }
 
 void switchesService()
@@ -280,6 +289,9 @@ void loop() {
 			loopCount =0;
 			if(doQuery) queryMotorStatus();
 		}
+		printSpeed();
+		if(state != STATE_HOMING) digitalSet(RUNNING);
+		else digitalClear(RUNNING);
 	}
 }
 

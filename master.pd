@@ -1,4 +1,4 @@
-#N canvas 273 247 265 385 10;
+#N canvas 248 273 265 385 10;
 #X declare -stdpath Fraise;
 #X obj 21 38 pied/pied 0 41424;
 #X obj 20 13 declare -stdpath Fraise;
@@ -167,7 +167,7 @@
 #X obj 20 221 fruit/fruit 1 fruitCtl 2 fwControl 1;
 #X obj 23 347 fruit/send fruitCtl;
 #X msg 134 325 Q\$1;
-#X obj 134 303 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+#X obj 134 303 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
 1;
 #X msg 23 326 c 1 c \$1;
 #X floatatom 23 305 5 0 15 2 brightness - -;
