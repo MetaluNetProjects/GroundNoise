@@ -1,8 +1,8 @@
-#N canvas 273 220 265 385 10;
+#N canvas 273 247 265 385 10;
 #X declare -stdpath Fraise;
 #X obj 21 38 pied/pied 0 41424;
 #X obj 20 13 declare -stdpath Fraise;
-#N canvas 591 112 576 597 moteurs 0;
+#N canvas 630 115 614 597 moteurs 0;
 #X obj 17 331 fruit/receive fruit1;
 #X msg 408 430 L\$1;
 #X obj 408 407 tgl 15 0 empty empty set_LED 18 7 0 10 -4034 -1 -1 0
@@ -11,9 +11,9 @@
 #X obj 8 162 dcmotor/motor fruit1 121 motorB;
 #X msg 208 364 c 120 c 4 i \$1;
 #X obj 211 340 hsl 128 15 -1023 1023 0 0 empty empty PWM_rotation -2
--8 0 10 -4034 -1 -1 6350 1;
+-8 0 10 -4034 -1 -1 0 1;
 #X obj 231 404 hsl 128 15 -1023 1023 0 0 empty empty PWM_translation
--2 -8 0 10 -257985 -1 -1 6350 1;
+-2 -8 0 10 -257985 -1 -1 0 1;
 #X msg 228 428 c 121 c 4 i \$1;
 #X msg 171 403 0;
 #X floatatom 24 376 5 0 0 0 - - -;
@@ -79,6 +79,24 @@
 #X floatatom 17 546 5 0 0 0 - - -;
 #X floatatom 56 548 5 0 0 0 - - -;
 #X obj 119 517 print;
+#X text 551 32 6 3 0, f 1;
+#X text 555 97 7 36 0, f 2;
+#X text 554 186 5 3 0, f 2;
+#X text 552 254 7 34 0, f 3;
+#N canvas 29 372 599 236 setparams 0;
+#X obj 69 81 s fruit1-motorA-posPid-params;
+#X msg 69 58 gainP 6 \, gainI 3 \, gainD 0;
+#X obj 67 136 s fruit1-motorA-speedPid-params;
+#X msg 67 113 gainP 7 \, gainI 36 \, gainD 0;
+#X obj 275 82 s fruit1-motorB-posPid-params;
+#X obj 273 137 s fruit1-motorB-speedPid-params;
+#X msg 275 59 gainP 5 \, gainI 3 \, gainD 0;
+#X msg 273 114 gainP 7 \, gainI 34 \, gainD 0;
+#X connect 1 0 0 0;
+#X connect 3 0 2 0;
+#X connect 6 0 4 0;
+#X connect 7 0 5 0;
+#X restore 439 361 pd setparams;
 #X connect 0 0 17 0;
 #X connect 1 0 16 1;
 #X connect 2 0 1 0;
