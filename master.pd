@@ -1,8 +1,8 @@
-#N canvas 248 273 265 385 10;
+#N canvas 441 510 265 385 10;
 #X declare -stdpath Fraise;
 #X obj 21 38 pied/pied 0 41424;
 #X obj 20 13 declare -stdpath Fraise;
-#N canvas 630 115 614 597 moteurs 0;
+#N canvas 630 115 614 597 moteurs 1;
 #X obj 17 331 fruit/receive fruit1;
 #X msg 408 430 L\$1;
 #X obj 408 407 tgl 15 0 empty empty set_LED 18 7 0 10 -4034 -1 -1 0
@@ -83,19 +83,19 @@
 #X text 555 97 7 36 0, f 2;
 #X text 554 186 5 3 0, f 2;
 #X text 552 254 7 34 0, f 3;
-#N canvas 29 372 599 236 setparams 0;
+#N canvas 29 372 599 236 setparams 1;
 #X obj 69 81 s fruit1-motorA-posPid-params;
-#X msg 69 58 gainP 6 \, gainI 3 \, gainD 0;
 #X obj 67 136 s fruit1-motorA-speedPid-params;
-#X msg 67 113 gainP 7 \, gainI 36 \, gainD 0;
-#X obj 275 82 s fruit1-motorB-posPid-params;
-#X obj 273 137 s fruit1-motorB-speedPid-params;
-#X msg 275 59 gainP 5 \, gainI 3 \, gainD 0;
-#X msg 273 114 gainP 7 \, gainI 34 \, gainD 0;
-#X connect 1 0 0 0;
-#X connect 3 0 2 0;
-#X connect 6 0 4 0;
-#X connect 7 0 5 0;
+#X obj 308 83 s fruit1-motorB-posPid-params;
+#X obj 306 138 s fruit1-motorB-speedPid-params;
+#X msg 69 58 gainP 6 \, gainI 3 \, gainD 0 \, max 1023;
+#X msg 67 113 gainP 7 \, gainI 36 \, gainD 0 \, max 1023;
+#X msg 308 60 gainP 5 \, gainI 3 \, gainD 0 \, max 1023;
+#X msg 306 115 gainP 7 \, gainI 34 \, gainD 0 \, max 1023;
+#X connect 4 0 0 0;
+#X connect 5 0 1 0;
+#X connect 6 0 2 0;
+#X connect 7 0 3 0;
 #X restore 439 361 pd setparams;
 #X connect 0 0 17 0;
 #X connect 1 0 16 1;
@@ -167,7 +167,7 @@
 #X obj 20 221 fruit/fruit 1 fruitCtl 2 fwControl 1;
 #X obj 23 347 fruit/send fruitCtl;
 #X msg 134 325 Q\$1;
-#X obj 134 303 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
+#X obj 134 303 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
 1;
 #X msg 23 326 c 1 c \$1;
 #X floatatom 23 305 5 0 15 2 brightness - -;
