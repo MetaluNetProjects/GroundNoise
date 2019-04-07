@@ -87,7 +87,7 @@ void printSpeed()
 
 void sendSpeed()
 {
-	unsigned char frbuf[6];
+	unsigned char frbuf[7];
 	//int finalSpeed = ((long)speed * CENTER_SPEED / 1000);
 	int finalSpeed = ((long)speed * 45) >> 2;
 	if(oldDir == 1) finalSpeed = -finalSpeed;
@@ -96,8 +96,9 @@ void sendSpeed()
 	frbuf[2] = 'S';
 	frbuf[3] = finalSpeed>>8;
 	frbuf[4] = finalSpeed&255;
-	frbuf[5] = '\n';
-	fraiseSendBroadcast(frbuf, 6);
+	frbuf[5] = oldMode;
+	frbuf[6] = '\n';
+	fraiseSendBroadcast(frbuf, 7);
 //	printSpeed();
 }
 
@@ -157,7 +158,7 @@ void speedService()
 	//print(speed, 2, oldDir);
 //	tmp_seconds = 1330000UL/speed;
 //	print((tmp_seconds/60)*100 + (tmp_seconds%60), 2);
-	sendSpeed();
+//	sendSpeed();
 }
 
 void doStart()
@@ -212,12 +213,12 @@ void doDir()
 	frbuf[5] = oldDir+'0';
 	frbuf[6] = '\n';
 	fraiseSendBroadcast(frbuf, 7);*/
-	sendSpeed();
+	//sendSpeed();
 }
 
 void doMode()
 {
-	unsigned char frbuf[7];
+	/*unsigned char frbuf[7];
 	frbuf[0] = 'C';
 	frbuf[1] = MOTOR_ID;
 	frbuf[2] = 'M';
@@ -225,7 +226,7 @@ void doMode()
 	frbuf[4] = 'D';
 	frbuf[5] = oldMode+'0';
 	frbuf[6] = '\n';
-	fraiseSendBroadcast(frbuf, 7);
+	fraiseSendBroadcast(frbuf, 7);*/
 //	sendSpeed();
 }
 
@@ -287,7 +288,7 @@ void loop() {
 		fraiseService();
 		if(loopCount == 5) {
 			loopCount =0;
-			if(doQuery) queryMotorStatus();
+			if(doQuery) sendSpeed();//queryMotorStatus();
 		}
 		printSpeed();
 		if(state != STATE_HOMING) digitalSet(RUNNING);

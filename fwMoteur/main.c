@@ -248,18 +248,29 @@ void loop() {
 			DCMOTOR(A).Setting.Mode = 1;
 		}
 		
-		if(homeSw) {
+		/*if(homeSw) {
 			DCMOTOR(B).Vars.PWMConsign = transHomePWM;
 			DCMOTOR(B).Setting.Mode = 0;
-		} else {
-			if(state == STATE_RUNNING) {
-				DCMOTOR(B).Vars.SpeedConsign = -1*ROT2TRANS(speed>>SPEED_FILTER);
-				DCMOTOR(B).Setting.Mode = 1;
-			} else {
+		} else {*/
+		if(state == STATE_RUNNING) {
+			DCMOTOR(B).Vars.SpeedConsign = -1*ROT2TRANS(speed>>SPEED_FILTER);
+			DCMOTOR(B).Setting.Mode = 1;
+
+			if((digitalRead(TRANS_HISW) == TRANS_SWLEVEL) && (DCMOTOR(B).Vars.SpeedConsign > 0)) {
+				DCMOTOR(B).Vars.PWMConsign = 0;
+				DCMOTOR(B).Setting.Mode = 0;
+			}
+		
+			if((digitalRead(TRANS_LOSW) == TRANS_SWLEVEL) && (DCMOTOR(B).Vars.SpeedConsign < 0)) {
+				DCMOTOR(B).Vars.PWMConsign = 0;
+				DCMOTOR(B).Setting.Mode = 0;
+			}			
+		}
+		/*else {
 				//DCMOTOR(B).Vars.PWMConsign = 0;
 				//DCMOTOR(B).Setting.Mode = 0;
 			}
-		}
+		}*/
 
 		testRotZero();
 		testTransEnds();
@@ -379,12 +390,12 @@ void fraiseReceiveCharBroadcast() // receive broadcast text
 		DCMOTOR(B).VolVars.homed = 0;*/
 		
 	}
-	else if(c=='M') {	// MOD
+	/*else if(c=='M') {	// MOD
 		if(fraiseGetChar() != 'O') return;
 		if(fraiseGetChar() != 'D') return;
 		
 		mode = fraiseGetChar() - '0';
-	}
+	}*/
 	else if(c=='A') {	// ABORT
 		if(fraiseGetChar() != 'B') return;
 		if(fraiseGetChar() != 'O') return;
@@ -399,12 +410,14 @@ void fraiseReceiveCharBroadcast() // receive broadcast text
 		DCMOTOR(B).Vars.PWMConsign = 0;
 		DCMOTOR(B).Setting.Mode = 0;
 	}
-	else if(c=='U') { // get status
+	/*else if(c=='U') { // get status
 		sendStatus();
-	}
+	}*/
 	else if(c=='S') { //SPEED
 		//(DCMOTOR(A).PosRamp).maxSpeed = fraiseGetInt();
 		targetSpeed = fraiseGetInt();
+		mode = fraiseGetChar();
+		sendStatus();
 	}
 }
 
